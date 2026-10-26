@@ -36,3 +36,30 @@ document.querySelectorAll('[data-carousel]').forEach((carousel) => {
   carousel.addEventListener('mouseleave', startCarousel);
   startCarousel();
 });
+
+const UTM_STORAGE_KEY = 'mascotes_checkout_utms';
+
+const getCheckoutUtms = () => {
+  const savedUtms = new URLSearchParams(sessionStorage.getItem(UTM_STORAGE_KEY) || '');
+  const currentParams = new URLSearchParams(window.location.search);
+
+  currentParams.forEach((value, key) => {
+    if (/^utm_/i.test(key)) savedUtms.set(key, value);
+  });
+
+  sessionStorage.setItem(UTM_STORAGE_KEY, savedUtms.toString());
+  return savedUtms;
+};
+
+const addUtmsToCheckout = (link, utms) => {
+  const checkoutUrl = new URL(link.href);
+  utms.forEach((value, key) => checkoutUrl.searchParams.set(key, value));
+  link.href = checkoutUrl.toString();
+};
+
+const checkoutLinks = document.querySelectorAll('a[href*="pay.wiapy.com"]');
+
+checkoutLinks.forEach((link) => {
+  addUtmsToCheckout(link, getCheckoutUtms());
+  link.addEventListener('click', () => addUtmsToCheckout(link, getCheckoutUtms()));
+});
